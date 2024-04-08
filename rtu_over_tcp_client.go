@@ -36,22 +36,22 @@ func (mb *rtuOverTcpTransporter) Send(aduRequest []byte) (aduResponse []byte, er
 		return
 	}
 	// Start the timer to close when idle
-	mb.lastActivity = time.Now()
-	mb.startCloseTimer()
+	mb.LastActivity = time.Now()
+	mb.StartCloseTimer()
 
 	// Set write and read timeout
 	var timeout time.Time
 	if mb.Timeout > 0 {
-		timeout = mb.lastActivity.Add(mb.Timeout)
+		timeout = mb.LastActivity.Add(mb.Timeout)
 	}
-	if err = mb.conn.SetDeadline(timeout); err != nil {
+	if err = mb.Conn.SetDeadline(timeout); err != nil {
 		_ = mb.close()
 		return
 	}
 
 	// Send the request
-	mb.logf("modbus: sending %q\n", aduRequest)
-	if _, err = mb.conn.Write(aduRequest); err != nil {
+	mb.Logf("modbus: sending %q\n", aduRequest)
+	if _, err = mb.Conn.Write(aduRequest); err != nil {
 		_ = mb.close()
 		return
 	}
@@ -65,7 +65,7 @@ func (mb *rtuOverTcpTransporter) Send(aduRequest []byte) (aduResponse []byte, er
 	var data [rtuMaxSize]byte
 	//We first read the minimum length and then read either the full package
 	//or the error package, depending on the error status (byte 2 of the response)
-	n, err = io.ReadAtLeast(mb.conn, data[:], rtuMinSize)
+	n, err = io.ReadAtLeast(mb.Conn, data[:], rtuMinSize)
 	if err != nil {
 		return
 	}
@@ -75,7 +75,7 @@ func (mb *rtuOverTcpTransporter) Send(aduRequest []byte) (aduResponse []byte, er
 		if n < bytesToRead {
 			if bytesToRead > rtuMinSize && bytesToRead <= rtuMaxSize {
 				if bytesToRead > n {
-					n1, err = io.ReadFull(mb.conn, data[n:bytesToRead])
+					n1, err = io.ReadFull(mb.Conn, data[n:bytesToRead])
 					n += n1
 				}
 			}
@@ -83,7 +83,7 @@ func (mb *rtuOverTcpTransporter) Send(aduRequest []byte) (aduResponse []byte, er
 	} else if data[1] == functionFail {
 		//for error, we need to read 5 bytes
 		if n < rtuExceptionSize {
-			n1, err = io.ReadFull(mb.conn, data[n:rtuExceptionSize])
+			n1, err = io.ReadFull(mb.Conn, data[n:rtuExceptionSize])
 		}
 		n += n1
 	}
@@ -92,7 +92,7 @@ func (mb *rtuOverTcpTransporter) Send(aduRequest []byte) (aduResponse []byte, er
 		return
 	}
 	aduResponse = data[:n]
-	mb.logf("modbus: received % x\n", aduResponse)
+	mb.Logf("modbus: received % x\n", aduResponse)
 	return
 }
 

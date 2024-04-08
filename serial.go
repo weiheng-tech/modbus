@@ -41,44 +41,44 @@ type SerialPort struct {
 	Logger      Logger
 	IdleTimeout time.Duration
 
-	mu sync.Mutex
+	Mu sync.Mutex
 	// port is platform-dependent data structure for serial port.
-	port         io.ReadWriteCloser
-	lastActivity time.Time
+	Conn         io.ReadWriteCloser
+	LastActivity time.Time
 	closeTimer   *time.Timer
 }
 
 func (mb *SerialPort) Connect() (err error) {
-	mb.mu.Lock()
-	defer mb.mu.Unlock()
+	mb.Mu.Lock()
+	defer mb.Mu.Unlock()
 
 	return mb.connect()
 }
 
 // connect connects to the serial port if it is not connected. Caller must hold the mutex.
 func (mb *SerialPort) connect() error {
-	if mb.port == nil {
+	if mb.Conn == nil {
 		port, err := serial.Open(&mb.Config)
 		if err != nil {
 			return err
 		}
-		mb.port = port
+		mb.Conn = port
 	}
 	return nil
 }
 
 func (mb *SerialPort) Close() (err error) {
-	mb.mu.Lock()
-	defer mb.mu.Unlock()
+	mb.Mu.Lock()
+	defer mb.Mu.Unlock()
 
 	return mb.close()
 }
 
 // close closes the serial port if it is connected. Caller must hold the mutex.
 func (mb *SerialPort) close() (err error) {
-	if mb.port != nil {
-		err = mb.port.Close()
-		mb.port = nil
+	if mb.Conn != nil {
+		err = mb.Conn.Close()
+		mb.Conn = nil
 	}
 	return
 }
@@ -89,7 +89,7 @@ func (mb *SerialPort) logf(format string, v ...interface{}) {
 	}
 }
 
-func (mb *SerialPort) startCloseTimer() {
+func (mb *SerialPort) StartCloseTimer() {
 	if mb.IdleTimeout <= 0 {
 		return
 	}
@@ -102,13 +102,13 @@ func (mb *SerialPort) startCloseTimer() {
 
 // closeIdle closes the connection if last activity is passed behind IdleTimeout.
 func (mb *SerialPort) closeIdle() {
-	mb.mu.Lock()
-	defer mb.mu.Unlock()
+	mb.Mu.Lock()
+	defer mb.Mu.Unlock()
 
 	if mb.IdleTimeout <= 0 {
 		return
 	}
-	idle := time.Now().Sub(mb.lastActivity)
+	idle := time.Now().Sub(mb.LastActivity)
 	if idle >= mb.IdleTimeout {
 		mb.logf("modbus: closing connection due to idle timeout: %v", idle)
 		mb.close()

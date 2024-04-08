@@ -120,12 +120,12 @@ func (mb *rtuSerialTransporter) Send(aduRequest []byte) (aduResponse []byte, err
 		return
 	}
 	// Start the timer to close when idle
-	mb.lastActivity = time.Now()
-	mb.startCloseTimer()
+	mb.LastActivity = time.Now()
+	mb.StartCloseTimer()
 
 	// Send the request
 	mb.logf("modbus: sending %q\n", aduRequest)
-	if _, err = mb.port.Write(aduRequest); err != nil {
+	if _, err = mb.Conn.Write(aduRequest); err != nil {
 		_ = mb.close()
 		return
 	}
@@ -139,7 +139,7 @@ func (mb *rtuSerialTransporter) Send(aduRequest []byte) (aduResponse []byte, err
 	var data [rtuMaxSize]byte
 	//We first read the minimum length and then read either the full package
 	//or the error package, depending on the error status (byte 2 of the response)
-	n, err = io.ReadAtLeast(mb.port, data[:], rtuMinSize)
+	n, err = io.ReadAtLeast(mb.Conn, data[:], rtuMinSize)
 	if err != nil {
 		return
 	}
@@ -149,7 +149,7 @@ func (mb *rtuSerialTransporter) Send(aduRequest []byte) (aduResponse []byte, err
 		if n < bytesToRead {
 			if bytesToRead > rtuMinSize && bytesToRead <= rtuMaxSize {
 				if bytesToRead > n {
-					n1, err = io.ReadFull(mb.port, data[n:bytesToRead])
+					n1, err = io.ReadFull(mb.Conn, data[n:bytesToRead])
 					n += n1
 				}
 			}
@@ -157,7 +157,7 @@ func (mb *rtuSerialTransporter) Send(aduRequest []byte) (aduResponse []byte, err
 	} else if data[1] == functionFail {
 		//for error we need to read 5 bytes
 		if n < rtuExceptionSize {
-			n1, err = io.ReadFull(mb.port, data[n:rtuExceptionSize])
+			n1, err = io.ReadFull(mb.Conn, data[n:rtuExceptionSize])
 		}
 		n += n1
 	}

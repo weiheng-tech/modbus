@@ -44,34 +44,34 @@ type TcpTransporter struct {
 	Logger Logger
 
 	// TCP connection
-	mu           sync.Mutex
-	conn         net.Conn
+	Mu           sync.Mutex
+	Conn         net.Conn
 	closeTimer   *time.Timer
-	lastActivity time.Time
+	LastActivity time.Time
 }
 
 // Connect establishes a new connection to the address in Address.
 // Connect and Close are exported so that multiple requests can be done with one session
 func (mb *TcpTransporter) Connect() error {
-	mb.mu.Lock()
-	defer mb.mu.Unlock()
+	mb.Mu.Lock()
+	defer mb.Mu.Unlock()
 
 	return mb.connect()
 }
 
 func (mb *TcpTransporter) connect() error {
-	if mb.conn == nil {
+	if mb.Conn == nil {
 		dialer := net.Dialer{Timeout: mb.Timeout}
 		conn, err := dialer.Dial("tcp", mb.Address)
 		if err != nil {
 			return err
 		}
-		mb.conn = conn
+		mb.Conn = conn
 	}
 	return nil
 }
 
-func (mb *TcpTransporter) startCloseTimer() {
+func (mb *TcpTransporter) StartCloseTimer() {
 	if mb.IdleTimeout <= 0 {
 		return
 	}
@@ -84,8 +84,8 @@ func (mb *TcpTransporter) startCloseTimer() {
 
 // Close closes current connection.
 func (mb *TcpTransporter) Close() error {
-	mb.mu.Lock()
-	defer mb.mu.Unlock()
+	mb.Mu.Lock()
+	defer mb.Mu.Unlock()
 
 	return mb.close()
 }
@@ -93,11 +93,11 @@ func (mb *TcpTransporter) Close() error {
 // flush flushes pending data in the connection,
 // returns io.EOF if connection is closed.
 func (mb *TcpTransporter) flush(b []byte) (err error) {
-	if err = mb.conn.SetReadDeadline(time.Now()); err != nil {
+	if err = mb.Conn.SetReadDeadline(time.Now()); err != nil {
 		return
 	}
 	// Timeout setting will be reset when reading
-	if _, err = mb.conn.Read(b); err != nil {
+	if _, err = mb.Conn.Read(b); err != nil {
 		// Ignore timeout error
 		if netError, ok := err.(net.Error); ok && netError.Timeout() {
 			err = nil
@@ -106,7 +106,7 @@ func (mb *TcpTransporter) flush(b []byte) (err error) {
 	return
 }
 
-func (mb *TcpTransporter) logf(format string, v ...interface{}) {
+func (mb *TcpTransporter) Logf(format string, v ...interface{}) {
 	if mb.Logger != nil {
 		mb.Logger.Printf(format, v...)
 	}
@@ -114,24 +114,24 @@ func (mb *TcpTransporter) logf(format string, v ...interface{}) {
 
 // closeLocked closes current connection. Caller must hold the mutex before calling this method.
 func (mb *TcpTransporter) close() (err error) {
-	if mb.conn != nil {
-		err = mb.conn.Close()
-		mb.conn = nil
+	if mb.Conn != nil {
+		err = mb.Conn.Close()
+		mb.Conn = nil
 	}
 	return
 }
 
 // closeIdle closes the connection if last activity is passed behind IdleTimeout.
 func (mb *TcpTransporter) closeIdle() {
-	mb.mu.Lock()
-	defer mb.mu.Unlock()
+	mb.Mu.Lock()
+	defer mb.Mu.Unlock()
 
 	if mb.IdleTimeout <= 0 {
 		return
 	}
-	idle := time.Now().Sub(mb.lastActivity)
+	idle := time.Now().Sub(mb.LastActivity)
 	if idle >= mb.IdleTimeout {
-		mb.logf("modbus: closing connection due to idle timeout: %v", idle)
+		mb.Logf("modbus: closing connection due to idle timeout: %v", idle)
 		mb.close()
 	}
 }

@@ -150,7 +150,7 @@ func (mb *tcpTransporter) Send(aduRequest []byte) (aduResponse []byte, err error
 	}
 	// Set timer to close when idle
 	mb.lastActivity = time.Now()
-	mb.startCloseTimer()
+	mb.StartCloseTimer()
 	// Set write and read timeout
 	var timeout time.Time
 	if mb.Timeout > 0 {
@@ -161,7 +161,7 @@ func (mb *tcpTransporter) Send(aduRequest []byte) (aduResponse []byte, err error
 		return
 	}
 	// Send data
-	mb.logf("modbus: sending % x", aduRequest)
+	mb.Logf("modbus: sending % x", aduRequest)
 	if _, err = mb.conn.Write(aduRequest); err != nil {
 		_ = mb.close()
 		return
@@ -189,6 +189,6 @@ func (mb *tcpTransporter) Send(aduRequest []byte) (aduResponse []byte, err error
 		return
 	}
 	aduResponse = data[:length]
-	mb.logf("modbus: received % x\n", aduResponse)
+	mb.Logf("modbus: received % x\n", aduResponse)
 	return
 }
