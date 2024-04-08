@@ -32,7 +32,7 @@ type rtuOverTcpTransporter struct {
 
 func (mb *rtuOverTcpTransporter) Send(aduRequest []byte) (aduResponse []byte, err error) {
 	// Make sure port is connected
-	if err = mb.connect(); err != nil {
+	if err = mb.Connect(); err != nil {
 		return
 	}
 	// Start the timer to close when idle
@@ -45,14 +45,14 @@ func (mb *rtuOverTcpTransporter) Send(aduRequest []byte) (aduResponse []byte, er
 		timeout = mb.LastActivity.Add(mb.Timeout)
 	}
 	if err = mb.Conn.SetDeadline(timeout); err != nil {
-		_ = mb.close()
+		_ = mb.ConnClose()
 		return
 	}
 
 	// Send the request
 	mb.Logf("modbus: sending %q\n", aduRequest)
 	if _, err = mb.Conn.Write(aduRequest); err != nil {
-		_ = mb.close()
+		_ = mb.ConnClose()
 		return
 	}
 	function := aduRequest[1]

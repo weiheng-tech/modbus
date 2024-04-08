@@ -50,16 +50,7 @@ type TcpTransporter struct {
 	LastActivity time.Time
 }
 
-// Connect establishes a new connection to the address in Address.
-// Connect and Close are exported so that multiple requests can be done with one session
 func (mb *TcpTransporter) Connect() error {
-	mb.Mu.Lock()
-	defer mb.Mu.Unlock()
-
-	return mb.connect()
-}
-
-func (mb *TcpTransporter) connect() error {
 	if mb.Conn == nil {
 		dialer := net.Dialer{Timeout: mb.Timeout}
 		conn, err := dialer.Dial("tcp", mb.Address)
@@ -87,7 +78,7 @@ func (mb *TcpTransporter) Close() error {
 	mb.Mu.Lock()
 	defer mb.Mu.Unlock()
 
-	return mb.close()
+	return mb.ConnClose()
 }
 
 // flush flushes pending data in the connection,
@@ -112,8 +103,8 @@ func (mb *TcpTransporter) Logf(format string, v ...interface{}) {
 	}
 }
 
-// closeLocked closes current connection. Caller must hold the mutex before calling this method.
-func (mb *TcpTransporter) close() (err error) {
+// ConnClose closeLocked closes current connection. Caller must hold the mutex before calling this method.
+func (mb *TcpTransporter) ConnClose() (err error) {
 	if mb.Conn != nil {
 		err = mb.Conn.Close()
 		mb.Conn = nil
@@ -132,6 +123,6 @@ func (mb *TcpTransporter) closeIdle() {
 	idle := time.Now().Sub(mb.LastActivity)
 	if idle >= mb.IdleTimeout {
 		mb.Logf("modbus: closing connection due to idle timeout: %v", idle)
-		mb.close()
+		mb.ConnClose()
 	}
 }

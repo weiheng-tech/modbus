@@ -128,7 +128,7 @@ func (mb *tcpTransporter) Send(aduRequest []byte) (aduResponse []byte, err error
 	defer mb.Mu.Unlock()
 
 	// Establish a new connection if not connected
-	if err = mb.connect(); err != nil {
+	if err = mb.Connect(); err != nil {
 		return
 	}
 	// Set timer to close when idle
@@ -140,13 +140,13 @@ func (mb *tcpTransporter) Send(aduRequest []byte) (aduResponse []byte, err error
 		timeout = mb.LastActivity.Add(mb.Timeout)
 	}
 	if err = mb.Conn.SetDeadline(timeout); err != nil {
-		_ = mb.close()
+		_ = mb.ConnClose()
 		return
 	}
 	// Send data
 	mb.Logf("modbus: sending % x", aduRequest)
 	if _, err = mb.Conn.Write(aduRequest); err != nil {
-		_ = mb.close()
+		_ = mb.ConnClose()
 		return
 	}
 	// Read header first

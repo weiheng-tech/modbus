@@ -48,15 +48,8 @@ type SerialPort struct {
 	closeTimer   *time.Timer
 }
 
-func (mb *SerialPort) Connect() (err error) {
-	mb.Mu.Lock()
-	defer mb.Mu.Unlock()
-
-	return mb.connect()
-}
-
-// connect connects to the serial port if it is not connected. Caller must hold the mutex.
-func (mb *SerialPort) connect() error {
+// Connect connects to the serial port if it is not connected. Caller must hold the mutex.
+func (mb *SerialPort) Connect() error {
 	if mb.Conn == nil {
 		port, err := serial.Open(&mb.Config)
 		if err != nil {
@@ -71,11 +64,11 @@ func (mb *SerialPort) Close() (err error) {
 	mb.Mu.Lock()
 	defer mb.Mu.Unlock()
 
-	return mb.close()
+	return mb.ConnClose()
 }
 
-// close closes the serial port if it is connected. Caller must hold the mutex.
-func (mb *SerialPort) close() (err error) {
+// ConnClose closes the serial port if it is connected. Caller must hold the mutex.
+func (mb *SerialPort) ConnClose() (err error) {
 	if mb.Conn != nil {
 		err = mb.Conn.Close()
 		mb.Conn = nil
@@ -111,6 +104,6 @@ func (mb *SerialPort) closeIdle() {
 	idle := time.Now().Sub(mb.LastActivity)
 	if idle >= mb.IdleTimeout {
 		mb.logf("modbus: closing connection due to idle timeout: %v", idle)
-		mb.close()
+		mb.ConnClose()
 	}
 }
