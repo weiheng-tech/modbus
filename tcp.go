@@ -81,9 +81,9 @@ func (mb *TcpTransporter) Close() error {
 	return mb.ConnClose()
 }
 
-// flush flushes pending data in the connection,
+// Flush flushes pending data in the connection,
 // returns io.EOF if connection is closed.
-func (mb *TcpTransporter) flush(b []byte) (err error) {
+func (mb *TcpTransporter) Flush(b []byte) (err error) {
 	if err = mb.Conn.SetReadDeadline(time.Now()); err != nil {
 		return
 	}
