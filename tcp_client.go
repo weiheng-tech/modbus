@@ -8,9 +8,6 @@ import (
 	"encoding/binary"
 	"fmt"
 	"io"
-	"log"
-	"net"
-	"sync"
 	"sync/atomic"
 	"time"
 )
@@ -123,52 +120,38 @@ func (mb *tcpPackager) Decode(adu []byte) (pdu *ProtocolDataUnit, err error) {
 // tcpTransporter implements Transporter interface.
 type tcpTransporter struct {
 	TcpTransporter
-	// Connect string
-	Address string
-	// Connect & Read timeout
-	Timeout time.Duration
-	// Idle timeout to close the connection
-	IdleTimeout time.Duration
-	// Transmission logger
-	Logger *log.Logger
-
-	// TCP connection
-	mu           sync.Mutex
-	conn         net.Conn
-	closeTimer   *time.Timer
-	lastActivity time.Time
 }
 
 // Send sends data to server and ensures response length is greater than header length.
 func (mb *tcpTransporter) Send(aduRequest []byte) (aduResponse []byte, err error) {
-	mb.mu.Lock()
-	defer mb.mu.Unlock()
+	mb.Mu.Lock()
+	defer mb.Mu.Unlock()
 
 	// Establish a new connection if not connected
 	if err = mb.connect(); err != nil {
 		return
 	}
 	// Set timer to close when idle
-	mb.lastActivity = time.Now()
+	mb.LastActivity = time.Now()
 	mb.StartCloseTimer()
 	// Set write and read timeout
 	var timeout time.Time
 	if mb.Timeout > 0 {
-		timeout = mb.lastActivity.Add(mb.Timeout)
+		timeout = mb.LastActivity.Add(mb.Timeout)
 	}
-	if err = mb.conn.SetDeadline(timeout); err != nil {
+	if err = mb.Conn.SetDeadline(timeout); err != nil {
 		_ = mb.close()
 		return
 	}
 	// Send data
 	mb.Logf("modbus: sending % x", aduRequest)
-	if _, err = mb.conn.Write(aduRequest); err != nil {
+	if _, err = mb.Conn.Write(aduRequest); err != nil {
 		_ = mb.close()
 		return
 	}
 	// Read header first
 	var data [tcpMaxLength]byte
-	if _, err = io.ReadFull(mb.conn, data[:tcpHeaderSize]); err != nil {
+	if _, err = io.ReadFull(mb.Conn, data[:tcpHeaderSize]); err != nil {
 		return
 	}
 	// Read length, ignore transaction & protocol id (4 bytes)
@@ -185,7 +168,7 @@ func (mb *tcpTransporter) Send(aduRequest []byte) (aduResponse []byte, err error
 	}
 	// Skip unit id
 	length += tcpHeaderSize - 1
-	if _, err = io.ReadFull(mb.conn, data[tcpHeaderSize:length]); err != nil {
+	if _, err = io.ReadFull(mb.Conn, data[tcpHeaderSize:length]); err != nil {
 		return
 	}
 	aduResponse = data[:length]
