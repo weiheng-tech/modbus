@@ -9,34 +9,32 @@ import (
 	"fmt"
 )
 
-// ENRtuProtocolHandler implements Packager and Transporter interface.
-type ENRtuProtocolHandler struct {
+// ENRtuClientHandler implements Packager and Transporter interface.
+type ENRtuClientHandler struct {
 	enRtuPackager
-	SerialPort
+	rtuSerialTransporter
 }
 
-// NewENRtuProtocolHandler allocates and initializes a ENRtuProtocolHandler.
-func NewENRtuProtocolHandler(address string, baudRate int) *ENRtuProtocolHandler {
-	handler := &ENRtuProtocolHandler{}
+// NewENRtuClientHandler allocates and initializes a ENRtuProtocolHandler.
+func NewENRtuClientHandler(address string) *ENRtuClientHandler {
+	handler := &ENRtuClientHandler{}
 	handler.Address = address
 	handler.Timeout = serialTimeout
 	handler.IdleTimeout = serialIdleTimeout
-	handler.BaudRate = baudRate
 	return handler
 }
 
-type ENRtuOverTCPProtocolHandler struct {
+type ENRtuOverTcpClientHandler struct {
 	enRtuPackager
 	rtuOverTcpTransporter
 }
 
-// NewENRtuOverTCPProtocolHandler allocates and initializes a ENRtuOverTCPProtocolHandler.
-func NewENRtuOverTCPProtocolHandler(address string, baudRate int) *ENRtuOverTCPProtocolHandler {
-	handler := &ENRtuOverTCPProtocolHandler{}
+// NewENRtuOverTcpClientHandler allocates and initializes a ENRtuOverTcpClientHandler.
+func NewENRtuOverTcpClientHandler(address string) *ENRtuOverTcpClientHandler {
+	handler := &ENRtuOverTcpClientHandler{}
 	handler.Address = address
 	handler.Timeout = tcpTimeout
 	handler.IdleTimeout = tcpIdleTimeout
-	handler.BaudRate = baudRate
 	return handler
 }
 
@@ -129,7 +127,7 @@ func (mb *enRtuPackager) Decode(adu []byte) (pdu *ProtocolDataUnit, err error) {
 	pdu.FunctionCode = adu[1]
 	pdu.Data = adu[2 : length-2]
 
-	// TODO
+	// TODO 去掉GunId的写法好像不对，另外最好对返回的GunId验证一下是否跟请求的GunId一致
 	switch pdu.FunctionCode {
 	case FuncCodeReadCoils, FuncCodeReadInputRegisters, FuncCodeReadHoldingRegisters:
 		pdu.Data = removeElement(pdu.Data, 1)

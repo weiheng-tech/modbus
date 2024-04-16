@@ -61,6 +61,10 @@ func (mb *client) ReadCoils(address, quantity uint16) (results []byte, err error
 		return
 	}
 	results = response.Data[1:]
+	if int((int(quantity)-1)/8)+1 != len(results) {
+		err = fmt.Errorf("modbus: response data size '%v' does not match quantity '%v'", len(results), quantity)
+		return
+	}
 	return
 }
 
@@ -95,6 +99,10 @@ func (mb *client) ReadDiscreteInputs(address, quantity uint16) (results []byte, 
 		return
 	}
 	results = response.Data[1:]
+	if int((int(quantity)-1)/8)+1 != len(results) {
+		err = fmt.Errorf("modbus: response data size '%v' does not match quantity '%v'", len(results), quantity)
+		return
+	}
 	return
 }
 
@@ -129,6 +137,10 @@ func (mb *client) ReadHoldingRegisters(address, quantity uint16) (results []byte
 		return
 	}
 	results = response.Data[1:]
+	if int(quantity)*2 != len(results) {
+		err = fmt.Errorf("modbus: response data size '%v' does not match quantity '%v'", len(results), quantity)
+		return
+	}
 	return
 }
 
@@ -163,6 +175,10 @@ func (mb *client) ReadInputRegisters(address, quantity uint16) (results []byte, 
 		return
 	}
 	results = response.Data[1:]
+	if int(quantity)*2 != len(results) {
+		err = fmt.Errorf("modbus: response data size '%v' does not match quantity '%v'", len(results), quantity)
+		return
+	}
 	return
 }
 
