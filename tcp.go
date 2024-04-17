@@ -103,7 +103,7 @@ func (mb *TcpPort) closeIdle() {
 	}
 	idle := time.Now().Sub(mb.LastActivity)
 	if idle >= mb.IdleTimeout {
-		mb.debugf("modbus: closing connection due to idle timeout: %v", idle)
+		mb.Debugf("modbus: closing connection due to idle timeout: %v", idle)
 		mb.ConnClose()
 	}
 }
@@ -124,7 +124,7 @@ func (mb *TcpPort) Flush(b []byte) (err error) {
 	return
 }
 
-func (mb *TcpPort) debugf(format string, v ...interface{}) {
+func (mb *TcpPort) Debugf(format string, v ...interface{}) {
 	if mb.Logger != nil {
 		mb.Logger.Debugf(format, v...)
 	}
