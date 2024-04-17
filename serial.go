@@ -74,7 +74,7 @@ func (mb *SerialPort) ConnClose() (err error) {
 	return
 }
 
-func (mb *SerialPort) debugf(format string, v ...interface{}) {
+func (mb *SerialPort) Debugf(format string, v ...interface{}) {
 	if mb.Logger != nil {
 		mb.Logger.Debugf(format, v...)
 	}
@@ -104,7 +104,7 @@ func (mb *SerialPort) closeIdle() {
 	}
 	idle := time.Now().Sub(mb.LastActivity)
 	if idle >= mb.IdleTimeout {
-		mb.debugf("modbus: closing connection due to idle timeout: %v", idle)
+		mb.Debugf("modbus: closing connection due to idle timeout: %v", idle)
 		mb.ConnClose()
 	}
 }
