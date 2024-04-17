@@ -16,8 +16,8 @@ const (
 	tcpIdleTimeout = 60 * time.Second
 )
 
-func NewTcpTransporter(address string, timeout, idleTimeout time.Duration) *TcpTransporter {
-	tp := &TcpTransporter{
+func NewTcpPort(address string, timeout, idleTimeout time.Duration) *TcpPort {
+	tp := &TcpPort{
 		Address:     address,
 		Timeout:     timeout,
 		IdleTimeout: idleTimeout,
@@ -32,8 +32,8 @@ func NewTcpTransporter(address string, timeout, idleTimeout time.Duration) *TcpT
 	return tp
 }
 
-// TcpTransporter implements Transporter interface.
-type TcpTransporter struct {
+// TcpPort implements Transporter interface.
+type TcpPort struct {
 	// Connect string
 	Address string
 	// Connect & Read timeout
@@ -50,7 +50,7 @@ type TcpTransporter struct {
 	LastActivity time.Time
 }
 
-func (mb *TcpTransporter) Connect() error {
+func (mb *TcpPort) Connect() error {
 	if mb.Conn == nil {
 		dialer := net.Dialer{Timeout: mb.Timeout}
 		conn, err := dialer.Dial("tcp", mb.Address)
@@ -62,28 +62,55 @@ func (mb *TcpTransporter) Connect() error {
 	return nil
 }
 
-func (mb *TcpTransporter) StartCloseTimer() {
-	if mb.IdleTimeout <= 0 {
-		return
-	}
-	if mb.closeTimer == nil {
-		mb.closeTimer = time.AfterFunc(mb.IdleTimeout, mb.closeIdle)
-	} else {
-		mb.closeTimer.Reset(mb.IdleTimeout)
-	}
-}
-
 // Close closes current connection.
-func (mb *TcpTransporter) Close() error {
+func (mb *TcpPort) Close() error {
 	mb.Mu.Lock()
 	defer mb.Mu.Unlock()
 
 	return mb.ConnClose()
 }
 
+// ConnClose closeLocked closes current connection. Caller must hold the mutex before calling this method.
+func (mb *TcpPort) ConnClose() (err error) {
+	if mb.Conn != nil {
+		err = mb.Conn.Close()
+		mb.Conn = nil
+	}
+	return
+}
+
+func (mb *TcpPort) StartCloseTimer() {
+	if mb.IdleTimeout <= 0 {
+		return
+	}
+	if mb.closeTimer == nil {
+		mb.closeTimer = time.AfterFunc(mb.IdleTimeout, mb.closeIdle)
+	} else {
+		if !mb.closeTimer.Stop() {
+			<-mb.closeTimer.C
+		}
+		mb.closeTimer.Reset(mb.IdleTimeout)
+	}
+}
+
+// closeIdle closes the connection if last activity is passed behind IdleTimeout.
+func (mb *TcpPort) closeIdle() {
+	mb.Mu.Lock()
+	defer mb.Mu.Unlock()
+
+	if mb.IdleTimeout <= 0 {
+		return
+	}
+	idle := time.Now().Sub(mb.LastActivity)
+	if idle >= mb.IdleTimeout {
+		mb.debugf("modbus: closing connection due to idle timeout: %v", idle)
+		mb.ConnClose()
+	}
+}
+
 // Flush flushes pending data in the connection,
 // returns io.EOF if connection is closed.
-func (mb *TcpTransporter) Flush(b []byte) (err error) {
+func (mb *TcpPort) Flush(b []byte) (err error) {
 	if err = mb.Conn.SetReadDeadline(time.Now()); err != nil {
 		return
 	}
@@ -97,32 +124,8 @@ func (mb *TcpTransporter) Flush(b []byte) (err error) {
 	return
 }
 
-func (mb *TcpTransporter) Logf(format string, v ...interface{}) {
+func (mb *TcpPort) debugf(format string, v ...interface{}) {
 	if mb.Logger != nil {
-		mb.Logger.Printf(format, v...)
-	}
-}
-
-// ConnClose closeLocked closes current connection. Caller must hold the mutex before calling this method.
-func (mb *TcpTransporter) ConnClose() (err error) {
-	if mb.Conn != nil {
-		err = mb.Conn.Close()
-		mb.Conn = nil
-	}
-	return
-}
-
-// closeIdle closes the connection if last activity is passed behind IdleTimeout.
-func (mb *TcpTransporter) closeIdle() {
-	mb.Mu.Lock()
-	defer mb.Mu.Unlock()
-
-	if mb.IdleTimeout <= 0 {
-		return
-	}
-	idle := time.Now().Sub(mb.LastActivity)
-	if idle >= mb.IdleTimeout {
-		mb.Logf("modbus: closing connection due to idle timeout: %v", idle)
-		mb.ConnClose()
+		mb.Logger.Debugf(format, v...)
 	}
 }

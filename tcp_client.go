@@ -119,7 +119,7 @@ func (mb *tcpPackager) Decode(adu []byte) (pdu *ProtocolDataUnit, err error) {
 
 // tcpTransporter implements Transporter interface.
 type tcpTransporter struct {
-	TcpTransporter
+	TcpPort
 }
 
 // Send sends data to server and ensures response length is greater than header length.
@@ -144,7 +144,7 @@ func (mb *tcpTransporter) Send(aduRequest []byte) (aduResponse []byte, err error
 		return
 	}
 	// Send data
-	mb.Logf("modbus: sending % x", aduRequest)
+	mb.debugf("modbus: sending % x", aduRequest)
 	if _, err = mb.Conn.Write(aduRequest); err != nil {
 		_ = mb.ConnClose()
 		return
@@ -172,6 +172,6 @@ func (mb *tcpTransporter) Send(aduRequest []byte) (aduResponse []byte, err error
 		return
 	}
 	aduResponse = data[:length]
-	mb.Logf("modbus: received % x\n", aduResponse)
+	mb.debugf("modbus: received % x\n", aduResponse)
 	return
 }

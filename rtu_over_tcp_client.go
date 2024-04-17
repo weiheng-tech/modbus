@@ -26,11 +26,14 @@ func NewRTUOverTcpClientHandler(address string) *RTUOverTcpClientHandler {
 
 // rtuSerialTransporter implements Transporter interface.
 type rtuOverTcpTransporter struct {
-	TcpTransporter
+	TcpPort
 	BaudRate int
 }
 
 func (mb *rtuOverTcpTransporter) Send(aduRequest []byte) (aduResponse []byte, err error) {
+	mb.Mu.Lock()
+	defer mb.Mu.Unlock()
+
 	// Make sure port is connected
 	if err = mb.Connect(); err != nil {
 		return
@@ -50,7 +53,7 @@ func (mb *rtuOverTcpTransporter) Send(aduRequest []byte) (aduResponse []byte, er
 	}
 
 	// Send the request
-	mb.Logf("modbus: sending %q\n", aduRequest)
+	mb.debugf("modbus: sending %q\n", aduRequest)
 	if _, err = mb.Conn.Write(aduRequest); err != nil {
 		_ = mb.ConnClose()
 		return
@@ -92,7 +95,7 @@ func (mb *rtuOverTcpTransporter) Send(aduRequest []byte) (aduResponse []byte, er
 		return
 	}
 	aduResponse = data[:n]
-	mb.Logf("modbus: received % x\n", aduResponse)
+	mb.debugf("modbus: received % x\n", aduResponse)
 	return
 }
 

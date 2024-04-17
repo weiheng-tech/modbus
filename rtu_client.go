@@ -106,15 +106,10 @@ type rtuSerialTransporter struct {
 	SerialPort
 }
 
-func (mb *rtuSerialTransporter) Close() (err error) {
-	if mb != nil {
-		err = mb.ConnClose()
-	}
-
-	return
-}
-
 func (mb *rtuSerialTransporter) Send(aduRequest []byte) (aduResponse []byte, err error) {
+	mb.Mu.Lock()
+	defer mb.Mu.Unlock()
+
 	// Make sure port is connected
 	if err = mb.Connect(); err != nil {
 		return
@@ -124,7 +119,7 @@ func (mb *rtuSerialTransporter) Send(aduRequest []byte) (aduResponse []byte, err
 	mb.StartCloseTimer()
 
 	// Send the request
-	mb.Logf("modbus: sending %q\n", aduRequest)
+	mb.debugf("modbus: sending %q\n", aduRequest)
 	if _, err = mb.Conn.Write(aduRequest); err != nil {
 		_ = mb.ConnClose()
 		return
@@ -166,7 +161,7 @@ func (mb *rtuSerialTransporter) Send(aduRequest []byte) (aduResponse []byte, err
 		return
 	}
 	aduResponse = data[:n]
-	mb.Logf("modbus: received % x\n", aduResponse)
+	mb.debugf("modbus: received % x\n", aduResponse)
 	return
 }
 
