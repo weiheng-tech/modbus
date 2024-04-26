@@ -87,9 +87,6 @@ func (mb *SerialPort) StartCloseTimer() {
 	if mb.closeTimer == nil {
 		mb.closeTimer = time.AfterFunc(mb.IdleTimeout, mb.closeIdle)
 	} else {
-		if !mb.closeTimer.Stop() {
-			<-mb.closeTimer.C
-		}
 		mb.closeTimer.Reset(mb.IdleTimeout)
 	}
 }
