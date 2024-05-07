@@ -11,7 +11,7 @@ import (
 
 // RTUOverTcpClientHandler implements Packager and Transporter interface.
 type RTUOverTcpClientHandler struct {
-	rtuPackager
+	RtuPackager
 	rtuOverTcpTransporter
 }
 

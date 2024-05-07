@@ -54,8 +54,8 @@ func (mb *enRtuPackager) dataBlock(value ...uint16) []byte {
 	return data
 }
 
-// dataBlockSuffix creates a sequence of uint16 data and append the suffix plus its length.
-func (mb *enRtuPackager) dataBlockSuffix(suffix []byte, value ...uint16) []byte {
+// DataBlockSuffix creates a sequence of uint16 data and append the suffix plus its length.
+func (mb *enRtuPackager) DataBlockSuffix(suffix []byte, value ...uint16) []byte {
 	length := 2 * len(value)
 	data := make([]byte, length+2+len(suffix))
 	for i, v := range value {
