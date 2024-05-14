@@ -86,8 +86,8 @@ type Packager interface {
 	Encode(pdu *ProtocolDataUnit) (adu []byte, err error)
 	Decode(adu []byte) (pdu *ProtocolDataUnit, err error)
 	Verify(aduRequest []byte, aduResponse []byte) (err error)
-	dataBlock(value ...uint16) []byte
-	dataBlockSuffix(suffix []byte, value ...uint16) []byte
+	DataBlock(value ...uint16) []byte
+	DataBlockSuffix(suffix []byte, value ...uint16) []byte
 }
 
 // Transporter specifies the transport layer.
