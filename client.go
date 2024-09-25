@@ -48,7 +48,7 @@ func (mb *client) ReadCoils(address, quantity uint16) (results []byte, err error
 	}
 	request := ProtocolDataUnit{
 		FunctionCode: FuncCodeReadCoils,
-		Data:         mb.packager.dataBlock(address, quantity),
+		Data:         mb.packager.DataBlock(address, quantity),
 	}
 	response, err := mb.send(&request)
 	if err != nil {
@@ -86,7 +86,7 @@ func (mb *client) ReadDiscreteInputs(address, quantity uint16) (results []byte, 
 	}
 	request := ProtocolDataUnit{
 		FunctionCode: FuncCodeReadDiscreteInputs,
-		Data:         mb.packager.dataBlock(address, quantity),
+		Data:         mb.packager.DataBlock(address, quantity),
 	}
 	response, err := mb.send(&request)
 	if err != nil {
@@ -124,7 +124,7 @@ func (mb *client) ReadHoldingRegisters(address, quantity uint16) (results []byte
 	}
 	request := ProtocolDataUnit{
 		FunctionCode: FuncCodeReadHoldingRegisters,
-		Data:         mb.packager.dataBlock(address, quantity),
+		Data:         mb.packager.DataBlock(address, quantity),
 	}
 	response, err := mb.send(&request)
 	if err != nil {
@@ -162,7 +162,7 @@ func (mb *client) ReadInputRegisters(address, quantity uint16) (results []byte, 
 	}
 	request := ProtocolDataUnit{
 		FunctionCode: FuncCodeReadInputRegisters,
-		Data:         mb.packager.dataBlock(address, quantity),
+		Data:         mb.packager.DataBlock(address, quantity),
 	}
 	response, err := mb.send(&request)
 	if err != nil {
@@ -201,7 +201,7 @@ func (mb *client) WriteSingleCoil(address, value uint16) (results []byte, err er
 	}
 	request := ProtocolDataUnit{
 		FunctionCode: FuncCodeWriteSingleCoil,
-		Data:         mb.packager.dataBlock(address, value),
+		Data:         mb.packager.DataBlock(address, value),
 	}
 	response, err := mb.send(&request)
 	if err != nil {
@@ -240,7 +240,7 @@ func (mb *client) WriteSingleCoil(address, value uint16) (results []byte, err er
 func (mb *client) WriteSingleRegister(address, value uint16) (results []byte, err error) {
 	request := ProtocolDataUnit{
 		FunctionCode: FuncCodeWriteSingleRegister,
-		Data:         mb.packager.dataBlock(address, value),
+		Data:         mb.packager.DataBlock(address, value),
 	}
 	response, err := mb.send(&request)
 	if err != nil {
@@ -285,7 +285,7 @@ func (mb *client) WriteMultipleCoils(address, quantity uint16, value []byte) (re
 	}
 	request := ProtocolDataUnit{
 		FunctionCode: FuncCodeWriteMultipleCoils,
-		Data:         mb.packager.dataBlockSuffix(value, address, quantity),
+		Data:         mb.packager.DataBlockSuffix(value, address, quantity),
 	}
 	response, err := mb.send(&request)
 	if err != nil {
@@ -330,7 +330,7 @@ func (mb *client) WriteMultipleRegisters(address, quantity uint16, value []byte)
 	}
 	request := ProtocolDataUnit{
 		FunctionCode: FuncCodeWriteMultipleRegisters,
-		Data:         mb.packager.dataBlockSuffix(value, address, quantity),
+		Data:         mb.packager.DataBlockSuffix(value, address, quantity),
 	}
 	response, err := mb.send(&request)
 	if err != nil {
@@ -371,7 +371,7 @@ func (mb *client) WriteMultipleRegisters(address, quantity uint16, value []byte)
 func (mb *client) MaskWriteRegister(address, andMask, orMask uint16) (results []byte, err error) {
 	request := ProtocolDataUnit{
 		FunctionCode: FuncCodeMaskWriteRegister,
-		Data:         mb.packager.dataBlock(address, andMask, orMask),
+		Data:         mb.packager.DataBlock(address, andMask, orMask),
 	}
 	response, err := mb.send(&request)
 	if err != nil {
@@ -427,7 +427,7 @@ func (mb *client) ReadWriteMultipleRegisters(readAddress, readQuantity, writeAdd
 	}
 	request := ProtocolDataUnit{
 		FunctionCode: FuncCodeReadWriteMultipleRegisters,
-		Data:         mb.packager.dataBlockSuffix(value, readAddress, readQuantity, writeAddress, writeQuantity),
+		Data:         mb.packager.DataBlockSuffix(value, readAddress, readQuantity, writeAddress, writeQuantity),
 	}
 	response, err := mb.send(&request)
 	if err != nil {
@@ -457,7 +457,7 @@ func (mb *client) ReadWriteMultipleRegisters(readAddress, readQuantity, writeAdd
 func (mb *client) ReadFIFOQueue(address uint16) (results []byte, err error) {
 	request := ProtocolDataUnit{
 		FunctionCode: FuncCodeReadFIFOQueue,
-		Data:         mb.packager.dataBlock(address),
+		Data:         mb.packager.DataBlock(address),
 	}
 	response, err := mb.send(&request)
 	if err != nil {

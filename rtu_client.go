@@ -20,7 +20,7 @@ const (
 
 // RTUClientHandler implements Packager and Transporter interface.
 type RTUClientHandler struct {
-	rtuPackager
+	RtuPackager
 	rtuSerialTransporter
 }
 
@@ -33,8 +33,8 @@ func NewRTUClientHandler(address string) *RTUClientHandler {
 	return handler
 }
 
-// rtuPackager implements Packager interface.
-type rtuPackager struct {
+// RtuPackager implements Packager interface.
+type RtuPackager struct {
 	basePackager
 	SlaveId byte
 }
@@ -45,7 +45,7 @@ type rtuPackager struct {
 //	Function        : 1 byte
 //	Data            : 0 up to 252 bytes
 //	CRC             : 2 byte
-func (mb *rtuPackager) Encode(pdu *ProtocolDataUnit) (adu []byte, err error) {
+func (mb *RtuPackager) Encode(pdu *ProtocolDataUnit) (adu []byte, err error) {
 	length := len(pdu.Data) + 4
 	if length > rtuMaxSize {
 		err = fmt.Errorf("modbus: length of data '%v' must not be bigger than '%v'", length, rtuMaxSize)
@@ -68,7 +68,7 @@ func (mb *rtuPackager) Encode(pdu *ProtocolDataUnit) (adu []byte, err error) {
 }
 
 // Verify verifies response length and slave id.
-func (mb *rtuPackager) Verify(aduRequest []byte, aduResponse []byte) (err error) {
+func (mb *RtuPackager) Verify(aduRequest []byte, aduResponse []byte) (err error) {
 	length := len(aduResponse)
 	// Minimum size (including address, function and CRC)
 	if length < rtuMinSize {
@@ -84,7 +84,7 @@ func (mb *rtuPackager) Verify(aduRequest []byte, aduResponse []byte) (err error)
 }
 
 // Decode extracts PDU from RTU frame and verify CRC.
-func (mb *rtuPackager) Decode(adu []byte) (pdu *ProtocolDataUnit, err error) {
+func (mb *RtuPackager) Decode(adu []byte) (pdu *ProtocolDataUnit, err error) {
 	length := len(adu)
 	// Calculate checksum
 	var crc crc

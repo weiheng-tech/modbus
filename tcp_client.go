@@ -22,7 +22,7 @@ const (
 
 // TCPClientHandler implements Packager and Transporter interface.
 type TCPClientHandler struct {
-	tcpPackager
+	TcpPackager
 	tcpTransporter
 }
 
@@ -35,8 +35,8 @@ func NewTCPClientHandler(address string) *TCPClientHandler {
 	return h
 }
 
-// tcpPackager implements Packager interface.
-type tcpPackager struct {
+// TcpPackager implements Packager interface.
+type TcpPackager struct {
 	basePackager
 	// For synchronization between messages of server & client
 	transactionId uint32
@@ -52,7 +52,7 @@ type tcpPackager struct {
 //	Unit identifier: 1 byte
 //	Function code: 1 byte
 //	Data: n bytes
-func (mb *tcpPackager) Encode(pdu *ProtocolDataUnit) (adu []byte, err error) {
+func (mb *TcpPackager) Encode(pdu *ProtocolDataUnit) (adu []byte, err error) {
 	adu = make([]byte, tcpHeaderSize+1+len(pdu.Data))
 
 	// Transaction identifier
@@ -73,7 +73,7 @@ func (mb *tcpPackager) Encode(pdu *ProtocolDataUnit) (adu []byte, err error) {
 }
 
 // Verify confirms transaction, protocol and unit id.
-func (mb *tcpPackager) Verify(aduRequest []byte, aduResponse []byte) (err error) {
+func (mb *TcpPackager) Verify(aduRequest []byte, aduResponse []byte) (err error) {
 	// Transaction id
 	responseVal := binary.BigEndian.Uint16(aduResponse)
 	requestVal := binary.BigEndian.Uint16(aduRequest)
@@ -102,7 +102,7 @@ func (mb *tcpPackager) Verify(aduRequest []byte, aduResponse []byte) (err error)
 //	Protocol identifier: 2 bytes
 //	Length: 2 bytes
 //	Unit identifier: 1 byte
-func (mb *tcpPackager) Decode(adu []byte) (pdu *ProtocolDataUnit, err error) {
+func (mb *TcpPackager) Decode(adu []byte) (pdu *ProtocolDataUnit, err error) {
 	// Read length value in the header
 	length := binary.BigEndian.Uint16(adu[4:])
 	pduLength := len(adu) - tcpHeaderSize
