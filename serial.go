@@ -37,8 +37,9 @@ func NewSerialPort(c serial.Config, idleTimeout time.Duration) *SerialPort {
 type SerialPort struct {
 	// Serial port configuration.
 	serial.Config
-	IdleTimeout time.Duration
-	Logger      Logger
+	IdleTimeout        time.Duration
+	QueryDelayDuration time.Duration // Query delay duration
+	Logger             Logger
 
 	Mu           sync.Mutex
 	Conn         io.ReadWriteCloser // port is platform-dependent data structure for serial port.
