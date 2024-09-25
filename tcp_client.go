@@ -125,7 +125,12 @@ type tcpTransporter struct {
 // Send sends data to server and ensures response length is greater than header length.
 func (mb *tcpTransporter) Send(aduRequest []byte) (aduResponse []byte, err error) {
 	mb.Mu.Lock()
-	defer mb.Mu.Unlock()
+	defer func() {
+		if mb.QueryDelayDuration > 0 {
+			time.Sleep(mb.QueryDelayDuration)
+		}
+		mb.Mu.Unlock()
+	}()
 
 	// Establish a new connection if not connected
 	if err = mb.Connect(); err != nil {

@@ -40,6 +40,8 @@ type TcpPort struct {
 	Timeout time.Duration
 	// Idle timeout to close the connection
 	IdleTimeout time.Duration
+	// Query delay duration
+	QueryDelayDuration time.Duration
 	// Transmission logger
 	Logger Logger
 

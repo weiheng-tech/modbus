@@ -32,7 +32,12 @@ type rtuOverTcpTransporter struct {
 
 func (mb *rtuOverTcpTransporter) Send(aduRequest []byte) (aduResponse []byte, err error) {
 	mb.Mu.Lock()
-	defer mb.Mu.Unlock()
+	defer func() {
+		if mb.QueryDelayDuration > 0 {
+			time.Sleep(mb.QueryDelayDuration)
+		}
+		mb.Mu.Unlock()
+	}()
 
 	// Make sure port is connected
 	if err = mb.Connect(); err != nil {
