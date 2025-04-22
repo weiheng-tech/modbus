@@ -5,11 +5,12 @@
 package modbus
 
 import (
+	"fmt"
 	"io"
 	"sync"
 	"time"
 
-	"github.com/jifanchn/serial"
+	"go.bug.st/serial"
 )
 
 const (
@@ -18,7 +19,42 @@ const (
 	serialIdleTimeout = 60 * time.Second
 )
 
-func NewSerialPort(c serial.Config, idleTimeout time.Duration) *SerialPort {
+type Config struct {
+	// Device path (/dev/ttyS0)
+	Address string
+	// Baud rate (default 19200)
+	BaudRate int
+	// Data bits: 5, 6, 7 or 8 (default 8)
+	DataBits int
+	// Stop bits: 1 or 2 (default 1)
+	StopBits int
+	// Parity: N - None, E - Even, O - Odd (default E)
+	// (The use of no parity requires 2 stop bits.)
+	Parity string
+	// Read (Write) timeout.
+	Timeout time.Duration
+	// Configuration related to RS485
+	RS485 RS485Config
+}
+
+type RS485Config struct {
+	// Enable RS485 support
+	Enabled bool
+	// Use RS485 Alternative Operation, directly handle RTS pin via ioctl
+	RS485Alternative bool
+	// Delay RTS prior to send
+	DelayRtsBeforeSend time.Duration
+	// Delay RTS after send
+	DelayRtsAfterSend time.Duration
+	// Set RTS high during send
+	RtsHighDuringSend bool
+	// Set RTS high after send
+	RtsHighAfterSend bool
+	// Rx during Tx
+	RxDuringTx bool
+}
+
+func NewSerialPort(c Config, idleTimeout time.Duration) *SerialPort {
 	if c.Timeout == 0 {
 		c.Timeout = serialTimeout
 	}
@@ -36,7 +72,7 @@ func NewSerialPort(c serial.Config, idleTimeout time.Duration) *SerialPort {
 // SerialPort has configuration and I/O controller.
 type SerialPort struct {
 	// Serial port configuration.
-	serial.Config
+	Config
 	IdleTimeout        time.Duration
 	QueryDelayDuration time.Duration // Query delay duration
 	Logger             Logger
@@ -49,8 +85,30 @@ type SerialPort struct {
 
 // Connect connects to the serial port if it is not connected. Caller must hold the mutex.
 func (mb *SerialPort) Connect() error {
+	var parity serial.Parity
+	switch mb.Parity {
+	case "N":
+		parity = serial.NoParity
+	case "E":
+		parity = serial.EvenParity
+	case "O":
+		parity = serial.OddParity
+	default:
+		return fmt.Errorf("invalid parity: %s", mb.Parity)
+	}
+
 	if mb.Conn == nil {
-		port, err := serial.Open(&mb.Config)
+		port, err := serial.Open(mb.Config.Address, &serial.Mode{
+			BaudRate: mb.BaudRate,
+			DataBits: mb.DataBits,
+			StopBits: serial.StopBits(mb.StopBits),
+			Parity:   parity,
+		})
+		if err != nil {
+			return err
+		}
+
+		err = port.SetReadTimeout(mb.Config.Timeout)
 		if err != nil {
 			return err
 		}
