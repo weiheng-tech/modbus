@@ -58,7 +58,7 @@ func (mb *rtuOverTcpTransporter) Send(aduRequest []byte) (aduResponse []byte, er
 	}
 
 	// Send the request
-	mb.Debugf("modbus: sending %q\n", aduRequest)
+	mb.Debugf("modbus: sending % x", aduRequest)
 	if _, err = mb.Conn.Write(aduRequest); err != nil {
 		_ = mb.ConnClose()
 		return
@@ -100,7 +100,7 @@ func (mb *rtuOverTcpTransporter) Send(aduRequest []byte) (aduResponse []byte, er
 		return
 	}
 	aduResponse = data[:n]
-	mb.Debugf("modbus: received % x\n", aduResponse)
+	mb.Debugf("modbus: received % x", aduResponse)
 	return
 }
 

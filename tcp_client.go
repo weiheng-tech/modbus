@@ -177,6 +177,6 @@ func (mb *tcpTransporter) Send(aduRequest []byte) (aduResponse []byte, err error
 		return
 	}
 	aduResponse = data[:length]
-	mb.Debugf("modbus: received % x\n", aduResponse)
+	mb.Debugf("modbus: received % x", aduResponse)
 	return
 }
