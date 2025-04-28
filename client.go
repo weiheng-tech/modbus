@@ -494,6 +494,10 @@ func (mb *client) send(request *ProtocolDataUnit) (response *ProtocolDataUnit, e
 		return
 	}
 	if err = mb.packager.Verify(aduRequest, aduResponse); err != nil {
+		if _, ok := mb.transporter.(*RTUClientHandler); ok {
+			return
+		}
+		mb.transporter.Close()
 		return
 	}
 	response, err = mb.packager.Decode(aduResponse)
